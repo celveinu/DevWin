@@ -21,6 +21,9 @@ rm -rf "$WORK"
 mkdir -p "$WORK"
 cd "$WORK"
 
+# Keep a copy of the build log next to the kit even if the build fails (CI uploads it).
+trap 'cp -f "$WORK/build.log" "$HERE/build.log" 2>/dev/null || true' EXIT
+
 echo "==> Configuring live-build (Debian 13 'trixie', amd64, hybrid ISO)"
 lb config \
   --distribution trixie \
@@ -38,13 +41,15 @@ lb config \
 
 echo "==> Copying package lists, hooks and overlay files"
 cp -r "$HERE/config/." "$WORK/config/"
+# Uploading through a website or Windows can drop the executable bit, so set it here.
 chmod +x "$WORK"/config/hooks/live/*.hook.chroot
+chmod +x "$WORK"/config/includes.chroot/usr/local/bin/*
 
 echo "==> Building ISO (this takes a while)"
 lb build 2>&1 | tee "$WORK/build.log"
 
 ISO="$(ls "$WORK"/*.iso | head -n1)"
 mv "$ISO" "$HERE/devwin-amd64.iso"
-sha256sum "$HERE/devwin-amd64.iso" | tee "$HERE/devwin-amd64.iso.sha256"
+( cd "$HERE" && sha256sum devwin-amd64.iso | tee devwin-amd64.iso.sha256 )
 echo "==> Done: $HERE/devwin-amd64.iso"
 echo "Test it in a VM first (QEMU/VirtualBox, UEFI on), then write to USB with balenaEtcher or dd."

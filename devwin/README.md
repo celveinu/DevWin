@@ -25,6 +25,28 @@ The result is `devwin-amd64.iso` and a `.sha256` file. Expect 30-90 minutes. The
 
 Steps in the hooks only log `WARN:` lines on failure and do not stop the build. Search the log for `WARN` after a build to see what was skipped (themes, VS Code, Waydroid, boot splash, rounded corners).
 
+## Build with GitHub Actions (no build machine needed)
+
+The kit includes `.github/workflows/build-iso.yml`, which builds the ISO on GitHub's servers and publishes it as a release.
+
+1. Create a GitHub repository. **Public is better**: public repositories get 4 CPUs and 16 GB RAM on the standard runner, private ones get 2 CPUs and 8 GB, and a private build also uses your free Actions minutes.
+2. Upload the **contents** of the `devwin` folder to the repository root, so `build.sh` sits at the top, next to `config/` and `.github/`. Using git or GitHub Desktop keeps file permissions; `build.sh` also fixes them itself.
+3. Check that `.github/workflows/build-iso.yml` is in the repository. Website uploads sometimes skip hidden folders. If it is missing, choose **Add file > Create new file**, type `.github/workflows/build-iso.yml` as the name, and paste in the file's contents.
+4. Open the **Actions** tab, choose **Build DevWin ISO**, click **Run workflow**, and enter a tag such as `v0.1.0`. (Pushing a tag that starts with `v` also starts a build.)
+   Use a new tag each time. The workflow checks the tag first and stops within seconds if a release with that name already exists, rather than failing after the build.
+5. Wait. Expect roughly 1-3 hours. GitHub stops any job after 6 hours. The workflow also converts Windows line endings to Linux ones before building, because they would break the scripts.
+6. Download the ISO from the repository's **Releases** page. It is marked "pre-release" because it is untested.
+
+Limits that shaped this workflow (from GitHub's documentation):
+
+- The runner has only 14 GB of disk, so the workflow deletes unused preinstalled tools first. That is a common trick, but I could not run it here, so if the build dies with "No space left on device" the cleanup needs to be bigger.
+- Each file in a release must be under 2 GiB, so a larger ISO is split into `devwin-amd64.iso.part-00`, `-01` and so on. The release notes show the commands to join them (`cat` on Linux and macOS, `copy /b` on Windows).
+- Free accounts have 500 MB of shared storage for Actions artifacts, so the ISO is not kept as an artifact. Only the small build log is, for 7 days.
+
+**If the build fails** (likely on the first try): open the failed run, download the `build-log` artifact, and search it for `E:` and `WARN`. The usual cause is a package name that does not exist in Debian 13. Fix `config/package-lists/devwin.list.chroot` and run the workflow again.
+
+**Before you publish the ISO publicly,** check the licenses of what it contains. It bundles Microsoft's VS Code and its Python and C/C++ extensions, whose licenses may restrict redistribution, and non-free firmware. I am not a lawyer and did not verify this. If it is a concern, leave VS Code out of the image and let users install it themselves (`devwin-install-devtools vscode`).
+
 ## Test
 
 1. Boot the ISO in QEMU or VirtualBox with **UEFI on** and at least 4 GB RAM.
