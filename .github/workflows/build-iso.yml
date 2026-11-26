@@ -1,0 +1,107 @@
+name: Build DevWin ISO
+
+# Run it by hand: Actions tab > "Build DevWin ISO" > Run workflow, then type a release tag such as v0.1.0.
+# Or push a tag that starts with "v" to build and publish automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create (for example v0.1.0)"
+        required: true
+        default: "v0.1.0"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360   # GitHub's maximum for a job
+    steps:
+      - name: Check out the kit
+        uses: actions/checkout@v4
+
+      # Fail in seconds, not after hours, if the release tag is already used.
+      - name: Stop early if the release tag is already taken
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "A release named $TAG already exists. Run the workflow again with a new tag." >&2
+            exit 1
+          fi
+
+      # Windows line endings (CRLF) break shell scripts and package lists, so convert them to Linux ones.
+      - name: Normalize line endings
+        run: |
+          find build.sh config -type f ! -name '*.png' ! -name '*.jpg' -exec sed -i 's/\r$//' {} +
+
+      # The runner has about 14 GB free and the build needs much more, so remove tools we do not use.
+      - name: Free up disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
+      # Debian's own container, so the trixie tooling matches the target release.
+      - name: Build the ISO inside a Debian 13 container
+        run: |
+          sudo docker run --rm --privileged -v "$PWD":/src -w /src debian:trixie \
+            bash -c "apt-get update && apt-get install -y ca-certificates && bash ./build.sh"
+          sudo chown -R "$(id -u):$(id -g)" .
+          ls -lh devwin-amd64.iso*
+
+      - name: Show skipped steps
+        if: always()
+        run: grep -n "WARN" build.log || echo "No WARN lines in the build log."
+
+      # The log is small, so it fits in artifact storage. The ISO does not, so it goes to a release instead.
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          limit=$((1900 * 1024 * 1024))   # stay under GitHub's 2 GiB per-file limit
+          size="$(stat -c %s devwin-amd64.iso)"
+          if [ "$size" -gt "$limit" ]; then
+            split -d -b 1900M devwin-amd64.iso devwin-amd64.iso.part-
+            files=(devwin-amd64.iso.part-*)
+            win_list="$(printf '%s+' "${files[@]}" | sed 's/+$//')"
+            JOIN=$(printf '%s\n' \
+              "The ISO is split into parts because GitHub limits each file to 2 GiB. Download every part and the .sha256 file, then join them:" \
+              "" \
+              "Linux or macOS: \`cat devwin-amd64.iso.part-* > devwin-amd64.iso\`" \
+              "" \
+              "Windows (Command Prompt, in the download folder): \`copy /b ${win_list} devwin-amd64.iso\`" \
+              "" \
+              "Then check it: \`sha256sum -c devwin-amd64.iso.sha256\` (Linux or macOS).")
+          else
+            files=(devwin-amd64.iso)
+            JOIN="Download the ISO and, if you like, check it with \`sha256sum -c devwin-amd64.iso.sha256\`."
+          fi
+          {
+            echo "DevWin ISO, built by Tech Lo Tech Hub."
+            echo
+            echo "**Untested build.** Try it in a virtual machine (UEFI on, 4 GB RAM or more) before real hardware. Secure Boot is not set up."
+            echo
+            echo "$JOIN"
+            echo
+            echo "Live session login: user \`devwin\`, password \`live\`."
+          } > notes.md
+          gh release create "$TAG" "${files[@]}" devwin-amd64.iso.sha256 \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "DevWin $TAG" --notes-file notes.md --target "$GITHUB_SHA" --prerelease
