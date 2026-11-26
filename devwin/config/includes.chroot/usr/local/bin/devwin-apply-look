@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Builds the Windows 11-style glass desktop on first login: centered floating taskbar,
+# blur, translucency, Fluent theme, wallpaper. Re-runs on next login until the panel step succeeds.
+set -u
+
+MARKER="$HOME/.config/devwin-look-applied"
+[ -f "$MARKER" ] && exit 0
+
+# The autostart entry can run before the Plasma shell is ready, so wait for it.
+for _ in $(seq 1 90); do
+  busctl --user status org.kde.plasmashell >/dev/null 2>&1 && break
+  sleep 1
+done
+sleep 3
+busctl --user status org.kde.plasmashell >/dev/null 2>&1 || exit 1
+
+# ---------- Theme (only if the Fluent install in the image worked) ----------
+LOOK="$(plasma-apply-lookandfeel --list 2>/dev/null | grep -i fluent | head -n1 | awk '{print $1}')"
+[ -n "$LOOK" ] && plasma-apply-lookandfeel -a "$LOOK" 2>/dev/null
+SCHEME="$(plasma-apply-colorscheme --list-schemes 2>/dev/null | grep -i fluent | grep -i dark | head -n1 | awk '{print $2}')"
+[ -n "$SCHEME" ] && plasma-apply-colorscheme "$SCHEME" 2>/dev/null
+ICON="$(ls /usr/share/icons 2>/dev/null | grep -i '^fluent.*dark' | head -n1)"
+[ -n "$ICON" ] && kwriteconfig6 --file kdeglobals --group Icons --key Theme "$ICON"
+
+# ---------- Window behaviour ----------
+kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight "IAX"
+kwriteconfig6 --file kwinrc --group Windows --key ElectricBorderMaximize true
+kwriteconfig6 --file kwinrc --group Windows --key ElectricBorderTiling true
+kwriteconfig6 --file kdeglobals --group KDE --key SingleClick false   # double-click to open, like Windows
+
+# ---------- Glass: blur + translucency ----------
+kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key translucencyEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key contrastEnabled true
+kwriteconfig6 --file kwinrc --group Effect-blur --key BlurStrength 8
+kwriteconfig6 --file kwinrc --group Effect-blur --key NoiseStrength 3
+
+# ---------- Fluid motion ----------
+kwriteconfig6 --file kwinrc --group Plugins --key wobblywindowsEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key slidingpopupsEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key fadingpopupsEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key overviewEnabled true
+kwriteconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor 0.6
+
+# ---------- Translucent Qt apps via Kvantum ----------
+KV="$(ls /usr/share/Kvantum 2>/dev/null | grep -i fluent | grep -i dark | head -n1)"
+if [ -n "$KV" ]; then
+  mkdir -p "$HOME/.config/Kvantum"
+  printf '[General]\ntheme=%s\n' "$KV" > "$HOME/.config/Kvantum/kvantum.kvconfig"
+  kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
+fi
+
+# ---------- Glass terminal ----------
+mkdir -p "$HOME/.local/share/konsole"
+cat > "$HOME/.local/share/konsole/DevWin.profile" <<'EOF'
+[General]
+Name=DevWin
+Parent=FALLBACK/
+
+[Appearance]
+ColorScheme=DevWinGlass
+EOF
+cat > "$HOME/.local/share/konsole/DevWinGlass.colorscheme" <<'EOF'
+[General]
+Description=DevWin Glass
+Opacity=0.78
+
+[Background]
+Color=18,20,28
+
+[Foreground]
+Color=230,232,240
+
+[Color0]
+Color=40,44,56
+[Color0Intense]
+Color=90,96,112
+[Color1]
+Color=255,95,109
+[Color1Intense]
+Color=255,130,140
+[Color2]
+Color=90,220,150
+[Color2Intense]
+Color=130,240,180
+[Color3]
+Color=250,200,90
+[Color3Intense]
+Color=255,220,130
+[Color4]
+Color=90,150,255
+[Color4Intense]
+Color=130,180,255
+[Color5]
+Color=190,120,255
+[Color5Intense]
+Color=210,150,255
+[Color6]
+Color=70,200,220
+[Color6Intense]
+Color=120,225,240
+[Color7]
+Color=200,204,216
+[Color7Intense]
+Color=240,242,250
+EOF
+kwriteconfig6 --file konsolerc --group "Desktop Entry" --key DefaultProfile "DevWin.profile"
+
+# ---------- Wallpaper ----------
+plasma-apply-wallpaperimage /usr/share/wallpapers/DevWin/contents/images/3840x2160.jpg 2>/dev/null
+
+# ---------- Reload KWin so effect settings take effect ----------
+busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1
+
+# ---------- Taskbar: centered, floating, translucent (last, because it decides success) ----------
+PANEL_JS='
+  var old = panels();
+  for (var i = 0; i < old.length; i++) { old[i].remove(); }
+
+  var p = new Panel;
+  p.location = "bottom";
+  p.height = 48;
+  p.alignment = "center";
+  p.lengthMode = "fit";
+  p.floating = true;
+  p.hiding = "none";
+  p.opacity = "translucent";
+
+  p.addWidget("org.kde.plasma.kickoff");
+  p.addWidget("org.kde.plasma.icontasks");
+  p.addWidget("org.kde.plasma.marginsseparator");
+  p.addWidget("org.kde.plasma.systemtray");
+  p.addWidget("org.kde.plasma.digitalclock");
+'
+if busctl --user call org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell evaluateScript s "$PANEL_JS" >/dev/null 2>&1; then
+  touch "$MARKER"
+else
+  exit 1   # try again at next login
+fi
+
+command -v waydroid >/dev/null && notify-send "DevWin" "Run devwin-android-setup in a terminal to enable Android apps." 2>/dev/null
+exit 0

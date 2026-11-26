@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Boot splash plus an optional rounded-corner window effect. Best-effort, never fails the build.
+set -uxo pipefail
+export DEBIAN_FRONTEND=noninteractive
+
+# ---------- Plymouth boot splash ----------
+if [ -f /usr/share/plymouth/themes/devwin/devwin.plymouth ] && command -v plymouth-set-default-theme >/dev/null; then
+  plymouth-set-default-theme devwin || echo "WARN: could not set plymouth theme"
+  update-initramfs -u || echo "WARN: initramfs update failed"
+else
+  echo "WARN: plymouth theme files or plymouth itself missing; boot splash skipped"
+fi
+
+# ---------- Rounded window corners (KDE-Rounded-Corners) ----------
+# Installed but NOT enabled automatically: it is built against whatever KWin version Debian ships,
+# and a mismatch can misbehave. Enable it in System Settings > Window Management > Desktop Effects
+# once you have confirmed it works on your build.
+apt-get update
+BEFORE="$(apt-mark showmanual | sort)"
+for pkg in cmake extra-cmake-modules g++ pkg-config kwin-dev libkdecorations3-dev \
+           qt6-base-dev qt6-base-private-dev libkf6configwidgets-dev libkf6coreaddons-dev \
+           libkf6windowsystem-dev libepoxy-dev libwayland-dev libxcb1-dev; do
+  apt-get install -y --no-install-recommends "$pkg" || echo "WARN: build dependency $pkg not available"
+done
+AFTER="$(apt-mark showmanual | sort)"
+
+(
+  set -e
+  rm -rf /tmp/rc && mkdir -p /tmp/rc && cd /tmp/rc
+  git clone --depth 1 https://github.com/matinlotfali/KDE-Rounded-Corners.git
+  cd KDE-Rounded-Corners
+  cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
+  cmake --build build -j"$(nproc)"
+  cmake --install build
+  echo "rounded-corners installed"
+) || echo "WARN: rounded-corner effect failed to build; skipping"
+rm -rf /tmp/rc
+
+# Remove the build tools again (only the ones this hook added) to keep the image small.
+NEW="$(comm -13 <(echo "$BEFORE") <(echo "$AFTER") | grep -vx git || true)"
+[ -n "$NEW" ] && apt-get purge -y $NEW || true
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+exit 0

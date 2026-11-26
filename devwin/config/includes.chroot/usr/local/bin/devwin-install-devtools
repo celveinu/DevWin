@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Optional large or fast-moving developer tools that are better installed per user than baked into the ISO.
+# Run:  devwin-install-devtools            (interactive menu)
+#       devwin-install-devtools node rust  (install specific items)
+# Everything installs into your home directory or as Flatpaks (--user). No sudo needed.
+set -uo pipefail
+
+PROFILE="$HOME/.profile"
+add_line() { grep -qxF "$1" "$PROFILE" 2>/dev/null || echo "$1" >> "$PROFILE"; }
+
+ensure_flathub() {
+  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+}
+
+flat() {  # flat <app id>
+  ensure_flathub && flatpak install --user -y flathub "$1"
+}
+
+install_node() {      # fnm (Node version manager) + latest LTS Node
+  curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell \
+    && add_line 'export PATH="$HOME/.local/share/fnm:$PATH"' \
+    && add_line 'eval "$(fnm env --use-on-cd)"' \
+    && export PATH="$HOME/.local/share/fnm:$PATH" \
+    && eval "$(fnm env)" && fnm install --lts
+}
+
+install_rust() {      # rustup (latest stable toolchain)
+  curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y
+}
+
+install_sdkman() {    # JVM tools: Kotlin, Gradle, Maven, multiple JDKs
+  curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
+    && add_line 'export SDKMAN_DIR="$HOME/.sdkman"' \
+    && add_line '[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' \
+    && echo "Then: sdk install kotlin"
+}
+
+install_pyenv() {     # Python version manager
+  curl -fsSL https://pyenv.run | bash \
+    && add_line 'export PYENV_ROOT="$HOME/.pyenv"' \
+    && add_line 'export PATH="$PYENV_ROOT/bin:$PATH"' \
+    && add_line 'eval "$(pyenv init -)"'
+}
+
+install_dotnet() {    # .NET SDK via Microsoft's official install script
+  tmp="$(mktemp)" && curl -fsSL https://dot.net/v1/dotnet-install.sh -o "$tmp" \
+    && bash "$tmp" --channel LTS \
+    && add_line 'export DOTNET_ROOT="$HOME/.dotnet"' \
+    && add_line 'export PATH="$DOTNET_ROOT:$PATH"'
+  rm -f "$tmp"
+}
+
+install_flutter() {   # Flutter SDK (stable). Android targets also need the Android Studio item.
+  mkdir -p "$HOME/dev" \
+    && { [ -d "$HOME/dev/flutter" ] || git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$HOME/dev/flutter"; } \
+    && add_line 'export PATH="$HOME/dev/flutter/bin:$PATH"' \
+    && echo "Then: flutter doctor"
+}
+
+install_android() { flat com.google.AndroidStudio; }   # Android Studio (includes SDK manager)
+install_dbeaver()  { flat io.dbeaver.DBeaverCommunity; }
+install_postman()  { flat com.getpostman.Postman; }
+install_insomnia() { flat rest.insomnia.Insomnia; }
+install_bottles()  { flat com.usebottles.bottles; }   # easy Windows app manager built on Wine
+install_vscode()   { flat com.visualstudio.code; }   # fallback if the build could not install VS Code from Microsoft's repo
+
+ITEMS=(node rust sdkman pyenv dotnet flutter android dbeaver postman insomnia vscode bottles)
+
+run_item() {
+  case "$1" in
+    node|rust|sdkman|pyenv|dotnet|flutter|android|dbeaver|postman|insomnia|vscode|bottles)
+      echo "==> Installing $1"
+      if "install_$1"; then echo "OK: $1"; else echo "FAILED: $1 (check your internet connection and try again)" >&2; fi ;;
+    *) echo "Unknown item: $1 (choose from: ${ITEMS[*]})" >&2 ;;
+  esac
+}
+
+if [ $# -gt 0 ]; then
+  for it in "$@"; do run_item "$it"; done
+else
+  echo "Choose tools to install (space-separated names, or 'all'):"
+  echo "  node     fnm + Node.js LTS"
+  echo "  rust     rustup + latest stable Rust"
+  echo "  sdkman   Kotlin / Gradle / Maven / JDK manager"
+  echo "  pyenv    Python version manager"
+  echo "  dotnet   .NET SDK (LTS)"
+  echo "  flutter  Flutter SDK"
+  echo "  android  Android Studio (Flatpak)"
+  echo "  dbeaver  DBeaver database GUI (Flatpak)"
+  echo "  postman  Postman (Flatpak)"
+  echo "  insomnia Insomnia (Flatpak)"
+  echo "  vscode   VS Code (Flatpak; only if the preinstalled one is missing)"
+  echo "  bottles  Bottles, a friendly manager for Windows apps (Wine)"
+  read -r -p "> " choice
+  [ "$choice" = "all" ] && choice="${ITEMS[*]}"
+  for it in $choice; do run_item "$it"; done
+fi
+
+echo
+echo "Open a new terminal (or run: source ~/.profile) to pick up new PATH entries."

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Branding: show "DevWin" and the vendor in system information. Best-effort.
+set -uxo pipefail
+
+OSREL="$(readlink -f /etc/os-release)"
+if [ -f "$OSREL" ]; then
+  sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="DevWin 0.1 (based on Debian GNU\/Linux 13)"/' "$OSREL" \
+    || echo "WARN: could not set PRETTY_NAME"
+  grep -q '^VENDOR_NAME=' "$OSREL" || echo 'VENDOR_NAME="Tech Lo Tech Hub"' >> "$OSREL"
+else
+  echo "WARN: os-release not found; branding skipped"
+fi
+
+# Make the desktop shortcut launchers executable so the desktop trusts them.
+chmod +x /etc/skel/Desktop/*.desktop 2>/dev/null || true
+exit 0

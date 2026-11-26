@@ -1,0 +1,10 @@
+{
+    "KPackageStructure": "Wallpaper/Images",
+    "KPlugin": {
+        "Id": "DevWin",
+        "Name": "DevWin Aurora",
+        "Description": "Blue, purple and teal aurora gradient designed to sit under translucent glass panels",
+        "Authors": [{ "Name": "DevWin" }],
+        "License": "CC0-1.0"
+    }
+}

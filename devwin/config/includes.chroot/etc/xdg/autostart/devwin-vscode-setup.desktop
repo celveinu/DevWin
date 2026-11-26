@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=DevWin VS Code extensions
+Exec=/usr/local/bin/devwin-vscode-setup
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2
+NoDisplay=true

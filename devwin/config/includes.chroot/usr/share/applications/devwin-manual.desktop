@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DevWin Manual
+GenericName=User Manual and Help
+Comment=Learn how to use DevWin (built by Tech Lo Tech Hub)
+Exec=devwin-help
+Icon=help-browser
+Categories=Utility;Documentation;
+Keywords=help;manual;guide;support;DevWin;
+Terminal=false

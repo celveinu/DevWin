@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Opens the DevWin user manual. Built by Tech Lo Tech Hub.
+#   devwin-help             open the manual in the browser
+#   devwin-help fix         open the troubleshooting guide
+#   devwin-help --text      read the manual in the terminal
+#   devwin-help --text fix  read the troubleshooting guide in the terminal
+set -u
+
+DOC=/usr/share/doc/devwin
+PAGER_CMD="${PAGER:-less}"
+
+show_text() {
+  local file="$DOC/manual.md"
+  [ "${1:-}" = "fix" ] && file="$DOC/troubleshooting.md"
+  if [ ! -f "$file" ]; then echo "Manual file not found: $file" >&2; exit 1; fi
+  "$PAGER_CMD" "$file"
+}
+
+case "${1:-}" in
+  -h|--help)
+    sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0 ;;
+  --text|-t)
+    show_text "${2:-}"
+    exit 0 ;;
+  fix|troubleshooting|--fix)
+    anchor="#troubleshooting-guide" ;;
+  *)
+    anchor="" ;;
+esac
+
+HTML="$DOC/manual.html"
+if [ ! -f "$HTML" ]; then
+  echo "HTML manual not found, showing the text version." >&2
+  show_text "${anchor:+fix}"
+  exit 0
+fi
+
+if [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && command -v xdg-open >/dev/null 2>&1; then
+  xdg-open "file://${HTML}${anchor}" >/dev/null 2>&1 &
+else
+  show_text "${anchor:+fix}"
+fi

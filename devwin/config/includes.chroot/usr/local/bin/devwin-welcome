@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# One-time welcome notice at first login. Built by Tech Lo Tech Hub.
+MARKER="$HOME/.config/devwin-welcome-shown"
+[ -f "$MARKER" ] && exit 0
+sleep 30
+if command -v notify-send >/dev/null 2>&1; then
+  notify-send -a "DevWin" "Welcome to DevWin" \
+    "Built by Tech Lo Tech Hub. Open 'DevWin Manual' from the Start menu to get started, or 'DevWin Doctor' if something is not working."
+fi
+mkdir -p "$HOME/.config" && touch "$MARKER"

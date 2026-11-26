@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Runs inside the image while it is being built (network required).
+# Every step is best-effort: a failure logs WARN and the build continues.
+set -uxo pipefail
+export DEBIAN_FRONTEND=noninteractive
+
+CODENAME="$(. /etc/os-release; echo "${VERSION_CODENAME:-trixie}")"
+
+# ---------- Waydroid (Android apps): Debian's own package first, upstream repo as fallback ----------
+if ! apt-get install -y waydroid; then
+  curl -fsSL https://repo.waydro.id/waydroid.gpg -o /usr/share/keyrings/waydroid.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ ${CODENAME} main" \
+         > /etc/apt/sources.list.d/waydroid.list \
+    && apt-get update \
+    && apt-get install -y waydroid \
+    || echo "WARN: waydroid not installed; Android app support will be missing"
+fi
+
+# ---------- Windows apps: 32-bit Wine support (many older Windows programs are 32-bit) ----------
+dpkg --add-architecture i386 \
+  && apt-get update \
+  && apt-get install -y wine32:i386 \
+  || echo "WARN: wine32 not installed; some 32-bit Windows apps may not run"
+
+# ---------- VS Code ----------
+# Tell the package not to add its own apt source (we add one below), which avoids duplicate-source warnings.
+echo "code code/add-microsoft-repo boolean false" | debconf-set-selections
+if curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft.gpg; then
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
+    > /etc/apt/sources.list.d/vscode.list
+  apt-get update
+  apt-get install -y code || echo "WARN: VS Code not installed"
+else
+  echo "WARN: could not fetch Microsoft key; VS Code skipped"
+fi
+
+# ---------- Windows 11-style themes (open-source Fluent, no Microsoft assets) ----------
+# Run as root these install system-wide under /usr/share.
+mkdir -p /tmp/themes
+cd /tmp/themes || exit 0
+for repo in Fluent-kde Fluent-icon-theme Fluent-gtk-theme; do
+  if git clone --depth 1 "https://github.com/vinceliuice/${repo}.git"; then
+    (cd "$repo" && ./install.sh) || echo "WARN: ${repo} install failed"
+  else
+    echo "WARN: could not clone ${repo}"
+  fi
+done
+cd / && rm -rf /tmp/themes
+
+# ---------- Services (ignore ones that are not present) ----------
+for svc in sddm NetworkManager docker zramswap earlyoom waydroid-container bluetooth; do
+  systemctl enable "$svc" || echo "WARN: could not enable $svc"
+done
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+exit 0

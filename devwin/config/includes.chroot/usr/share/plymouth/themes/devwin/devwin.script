@@ -1,0 +1,52 @@
+# DevWin boot splash: aurora background, softly pulsing glass orb, thin progress bar.
+
+Window.SetBackgroundTopColor(0.03, 0.04, 0.09);
+Window.SetBackgroundBottomColor(0.03, 0.02, 0.08);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+bg = Image("background.png");
+bg_sprite = Sprite(bg.Scale(screen_w, screen_h));
+bg_sprite.SetZ(-100);
+
+orb = Image("orb.png");
+orb_sprite = Sprite(orb);
+orb_sprite.SetPosition(screen_w / 2 - orb.GetWidth() / 2, screen_h / 2 - orb.GetHeight() / 2 - 40, 10);
+
+# Progress bar, drawn by stretching a tiny white pixel image
+bar_w = 320;
+bar_h = 4;
+bar_x = screen_w / 2 - bar_w / 2;
+bar_y = screen_h / 2 + orb.GetHeight() / 2 + 10;
+bar = Image("bar.png");
+
+track_sprite = Sprite(bar.Scale(bar_w, bar_h));
+track_sprite.SetPosition(bar_x, bar_y, 5);
+track_sprite.SetOpacity(0.15);
+
+fill_sprite = Sprite();
+fill_sprite.SetPosition(bar_x, bar_y, 6);
+fill_sprite.SetOpacity(0.9);
+
+boot_progress = 0;
+last_w = 0;
+frame = 0;
+
+fun refresh_callback() {
+    frame++;
+    orb_sprite.SetOpacity(0.78 + 0.22 * Math.Sin(frame / 18));
+
+    w = Math.Int(bar_w * boot_progress);
+    if (w < 1) w = 1;
+    if (w != last_w) {
+        fill_sprite.SetImage(bar.Scale(w, bar_h));
+        last_w = w;
+    }
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+fun progress_callback(duration, p) {
+    boot_progress = p;
+}
+Plymouth.SetBootProgressFunction(progress_callback);

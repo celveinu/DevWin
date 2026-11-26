@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DevWin Troubleshooting
+GenericName=Problem Fixing Guide
+Comment=Fix common problems step by step
+Exec=devwin-help fix
+Icon=help-hint
+Categories=Utility;Documentation;
+Keywords=troubleshoot;problem;fix;error;help;
+Terminal=false

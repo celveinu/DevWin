@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+# DevWin Doctor: checks common problems and suggests fixes. Built by Tech Lo Tech Hub.
+#   devwin-doctor            run the checks
+#   devwin-doctor --fix      choose a safe one-step fix
+#   devwin-doctor --report   save devwin-report.txt in your home folder
+set -u
+
+OKS=0
+WARNS=0
+ok()      { printf '  [ OK ] %s\n' "$1"; OKS=$((OKS + 1)); }
+warn()    { printf '  [WARN] %s\n         Try: %s\n' "$1" "$2"; WARNS=$((WARNS + 1)); }
+info()    { printf '  [ .. ] %s\n' "$1"; }
+section() { printf '\n== %s ==\n' "$1"; }
+has()     { command -v "$1" >/dev/null 2>&1; }
+
+run_checks() {
+  echo "DevWin Doctor - Built by Tech Lo Tech Hub"
+  date
+
+  section "Session and desktop"
+  if [ "${XDG_SESSION_TYPE:-}" = "wayland" ]; then
+    ok "Wayland session"
+  else
+    warn "Not a Wayland session (${XDG_SESSION_TYPE:-unknown}); Android apps need Wayland" \
+         "log out and choose 'Plasma (Wayland)' on the login screen"
+  fi
+  comp="$(busctl --user get-property org.kde.KWin /Compositor org.kde.kwin.Compositing active 2>/dev/null)"
+  case "$comp" in
+    "b true")  ok "Desktop effects (compositing) are on" ;;
+    "b false") warn "Desktop effects are off, so glass effects will not show" \
+                    "System Settings > Window Management > Desktop Effects, or restart the desktop with devwin-doctor --fix" ;;
+    *)         info "Could not read the compositing state (are you in a graphical session?)" ;;
+  esac
+  if [ -f "$HOME/.config/devwin-look-applied" ]; then
+    ok "DevWin look has been applied"
+  else
+    warn "DevWin look has not been applied yet" "wait a minute after login, or run devwin-doctor --fix"
+  fi
+  has lspci && info "Graphics: $(lspci -k 2>/dev/null | grep -A2 -Ei 'vga|3d|display' | tr '\n' ' ' | sed 's/  */ /g' | cut -c1-200)"
+
+  section "Memory and disk"
+  mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+  mem_gb=$((mem_kb / 1024 / 1024))
+  if [ "$mem_kb" -lt 3500000 ]; then
+    warn "Only about ${mem_gb} GB of RAM; Android apps and virtual machines will be slow" \
+         "turn off glass effects (devwin-doctor --fix) and close Android with: waydroid session stop"
+  else
+    ok "About ${mem_gb} GB of RAM"
+  fi
+  if swapon --show 2>/dev/null | grep -q zram; then
+    ok "Compressed memory (zram) is on"
+  else
+    warn "zram swap is not active" "sudo systemctl enable --now zramswap"
+  fi
+  used="$(df --output=pcent / 2>/dev/null | tail -n1 | tr -dc '0-9')"
+  if [ -n "$used" ] && [ "$used" -ge 90 ]; then
+    warn "The disk is ${used}% full" "sudo apt clean; sudo apt autoremove; docker system prune"
+  else
+    ok "Disk space is fine (${used:-?}% used)"
+  fi
+
+  section "Network and packages"
+  if curl -fsS -m 6 -o /dev/null https://deb.debian.org 2>/dev/null; then
+    ok "Internet works"
+  else
+    warn "No internet (or deb.debian.org is unreachable)" "check Wi-Fi or cable, then: nmcli device status"
+  fi
+  if has dpkg && dpkg --audit 2>/dev/null | grep -q .; then
+    warn "Some packages are half-installed or broken" "sudo dpkg --configure -a && sudo apt -f install"
+  else
+    ok "Package database looks fine"
+  fi
+  failed="$(systemctl --failed --no-legend 2>/dev/null | awk '{print $2}' | head -n 5 | tr '\n' ' ')"
+  if [ -n "$failed" ]; then
+    warn "Failed system services: $failed" "systemctl status <name>, then restart it with sudo systemctl restart <name>"
+  else
+    ok "No failed system services"
+  fi
+
+  section "Android apps (Waydroid)"
+  if has waydroid; then
+    ok "Waydroid is installed"
+    if grep -qs binder /proc/filesystems; then
+      ok "Kernel supports Android (binder)"
+    else
+      warn "Kernel has no binder support" "load it with: sudo modprobe binder_linux; if that fails this kernel cannot run Android apps"
+    fi
+    if systemctl is-active --quiet waydroid-container 2>/dev/null; then
+      ok "Waydroid container service is running"
+    else
+      warn "Waydroid container service is not running" "sudo systemctl restart waydroid-container (first-time setup: devwin-android-setup)"
+    fi
+  else
+    warn "Waydroid is not installed" "sudo apt install waydroid"
+  fi
+
+  section "Windows apps (Wine)"
+  if has wine; then
+    ok "Wine is installed ($(wine --version 2>/dev/null))"
+    if dpkg --print-foreign-architectures 2>/dev/null | grep -q i386 && dpkg -s wine32 >/dev/null 2>&1; then
+      ok "32-bit Wine support is installed"
+    else
+      warn "32-bit Wine support is missing; older Windows apps may fail" \
+           "sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install wine32:i386"
+    fi
+  else
+    warn "Wine is not installed" "sudo apt install wine"
+  fi
+
+  section "Developer tools"
+  if has code; then
+    ok "VS Code is installed"
+    if [ -f "$HOME/.config/devwin-vscode-extensions-done" ]; then
+      ok "VS Code extensions for Python, C and C++ are installed"
+    else
+      warn "VS Code extensions are not installed yet" "connect to the internet and run: devwin-vscode-setup --force"
+    fi
+  else
+    warn "VS Code is not installed" "devwin-install-devtools vscode"
+  fi
+  if has docker; then
+    if id -nG | tr ' ' '\n' | grep -qx docker; then
+      ok "You are in the docker group"
+    else
+      warn "You are not in the docker group" "sudo usermod -aG docker \$USER, then sign out and back in"
+    fi
+    if systemctl is-active --quiet docker 2>/dev/null; then
+      ok "Docker service is running"
+    else
+      warn "Docker service is not running" "sudo systemctl enable --now docker"
+    fi
+  fi
+  if [ -e /dev/kvm ]; then
+    if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+      ok "Virtualization (KVM) is available"
+    else
+      warn "KVM exists but you cannot use it" "sudo usermod -aG kvm,libvirt \$USER, then sign out and back in"
+    fi
+  else
+    warn "No KVM (hardware virtualization) found" "turn on Intel VT-x / AMD-V / SVM in the computer's firmware settings"
+  fi
+
+  printf '\nDone: %s checks passed, %s need attention.\n' "$OKS" "$WARNS"
+  [ "$WARNS" -gt 0 ] && echo "For one-step fixes run: devwin-doctor --fix    Full guide: devwin-help fix"
+}
+
+reload_kwin() { busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1; }
+
+set_glass() {   # set_glass true|false
+  for key in blurEnabled translucencyEnabled wobblywindowsEnabled magiclampEnabled contrastEnabled; do
+    kwriteconfig6 --file kwinrc --group Plugins --key "$key" "$1"
+  done
+  reload_kwin
+}
+
+fix_menu() {
+  echo "Choose a fix (type the number):"
+  PS3="> "
+  select choice in \
+    "Re-apply the DevWin look" \
+    "Restart the desktop (taskbar and shell)" \
+    "Restart sound" \
+    "Restart Android (Waydroid)" \
+    "Turn glass effects OFF (faster)" \
+    "Turn glass effects ON" \
+    "Quit"; do
+    case "$REPLY" in
+      1) rm -f "$HOME/.config/devwin-look-applied"; devwin-apply-look && echo "Done." || echo "Could not finish; try again after the desktop has fully loaded." ;;
+      2) nohup plasmashell --replace >/dev/null 2>&1 & echo "Restarting the desktop shell..." ;;
+      3) systemctl --user restart pipewire pipewire-pulse wireplumber && echo "Sound restarted." ;;
+      4) waydroid session stop 2>/dev/null; sudo systemctl restart waydroid-container && waydroid session start >/dev/null 2>&1 & echo "Restarting Android..." ;;
+      5) set_glass false; echo "Glass effects are off." ;;
+      6) set_glass true; echo "Glass effects are on." ;;
+      7) break ;;
+      *) echo "Please type a number from 1 to 7." ;;
+    esac
+    : "${choice:-}"
+  done
+}
+
+report() {
+  out="$HOME/devwin-report.txt"
+  {
+    run_checks
+    section "System"
+    cat /etc/devwin-release 2>/dev/null
+    grep -E '^(PRETTY_NAME|VERSION)=' /etc/os-release 2>/dev/null
+    uname -a
+    section "Hardware"
+    has lspci && lspci -k 2>/dev/null | head -n 60
+    free -h
+    df -h /
+    section "Recent errors (this boot)"
+    journalctl -p err -b --no-pager 2>/dev/null | tail -n 60
+    section "Versions"
+    for t in code docker wine waydroid python3 gcc g++ clang; do
+      has "$t" && printf '%s: %s\n' "$t" "$("$t" --version 2>&1 | head -n 1)"
+    done
+  } > "$out" 2>&1
+  echo "Report saved to: $out"
+  echo "Send this file to Tech Lo Tech Hub when asking for support."
+}
+
+case "${1:-}" in
+  --fix|fix)     fix_menu ;;
+  --report|report) report ;;
+  -h|--help)     sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)             run_checks ;;
+esac

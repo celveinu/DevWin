@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=DevWin welcome
+Exec=/usr/local/bin/devwin-welcome
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2
+NoDisplay=true

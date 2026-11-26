@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# One-shot Android app support setup (Waydroid). Run from the installed system, not from a live USB.
+set -euo pipefail
+
+if ! command -v waydroid >/dev/null; then
+  echo "Waydroid is not installed." >&2; exit 1
+fi
+
+if [ "${XDG_SESSION_TYPE:-}" != "wayland" ]; then
+  echo "Waydroid needs a Wayland session. Log out and choose 'Plasma (Wayland)'." >&2; exit 1
+fi
+
+# Waydroid needs Android's binder IPC in the kernel.
+if ! grep -qs binder /proc/filesystems && ! ls /dev/binderfs >/dev/null 2>&1; then
+  sudo modprobe binder_linux devices="binder,hwbinder,vndbinder" 2>/dev/null || true
+fi
+if ! grep -qs binder /proc/filesystems; then
+  echo "This kernel has no binder support. Install a kernel with CONFIG_ANDROID_BINDER_IPC / BINDERFS (see README)." >&2
+  exit 1
+fi
+
+sudo waydroid init -s GAPPS -f
+sudo systemctl enable --now waydroid-container
+waydroid session start &
+sleep 5
+waydroid show-full-ui &
+
+echo
+echo "Install an APK with:   waydroid app install app.apk"
+echo "To register the device with Google (Play Store login):"
+echo "  sudo waydroid shell -- sh -c \"sqlite3 /data/data/com.google.android.gsf/databases/gservices.db 'select * from main where name=\\\"android_id\\\";'\""
+echo "  then paste the ID at https://www.google.com/android/uncertified"

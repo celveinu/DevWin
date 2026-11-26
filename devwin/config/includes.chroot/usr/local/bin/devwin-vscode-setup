@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Installs the VS Code extensions for Python, C and C++ for the current user.
+# Runs at first login (needs internet). If it cannot finish it tries again at the next login.
+# Run it by hand any time:  devwin-vscode-setup
+set -u
+
+MARKER="$HOME/.config/devwin-vscode-extensions-done"
+[ -f "$MARKER" ] && [ "${1:-}" != "--force" ] && exit 0
+
+command -v code >/dev/null 2>&1 || { echo "VS Code is not installed. Try: devwin-install-devtools vscode" >&2; exit 1; }
+
+EXTENSIONS=(
+  ms-python.python
+  ms-python.vscode-pylance
+  ms-python.debugpy
+  charliermarsh.ruff
+  ms-vscode.cpptools
+  ms-vscode.cmake-tools
+  ms-vscode.makefile-tools
+  twxs.cmake
+)
+
+# Wait for the network (the marketplace needs it).
+online=0
+for _ in $(seq 1 30); do
+  if curl -fsS -m 5 -o /dev/null https://marketplace.visualstudio.com; then online=1; break; fi
+  sleep 4
+done
+[ "$online" -eq 1 ] || { echo "No internet; will retry at next login." >&2; exit 1; }
+
+installed="$(code --list-extensions 2>/dev/null)"
+failed=0
+for ext in "${EXTENSIONS[@]}"; do
+  if echo "$installed" | grep -qix "$ext"; then continue; fi
+  if ! code --install-extension "$ext" --force >/dev/null 2>&1; then
+    echo "Failed: $ext" >&2
+    failed=1
+  fi
+done
+
+if [ "$failed" -eq 0 ]; then
+  touch "$MARKER"
+  notify-send "DevWin" "VS Code is ready for Python, C and C++." 2>/dev/null
+  exit 0
+fi
+exit 1

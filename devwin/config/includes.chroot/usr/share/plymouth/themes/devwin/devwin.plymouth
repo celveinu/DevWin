@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=DevWin
+Description=Glass orb boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/devwin
+ScriptFile=/usr/share/plymouth/themes/devwin/devwin.script

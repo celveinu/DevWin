@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DevWin Doctor
+GenericName=System Check
+Comment=Check your system for common problems
+Exec=bash -c "devwin-doctor; echo; read -r -p 'Press Enter to close... '"
+Icon=utilities-system-monitor
+Categories=System;Utility;
+Keywords=doctor;check;diagnose;fix;problem;
+Terminal=true

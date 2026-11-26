@@ -1,0 +1,5 @@
+NAME="DevWin"
+VERSION="0.1"
+VENDOR="Tech Lo Tech Hub"
+BASED_ON="Debian GNU/Linux 13 (trixie)"
+DESKTOP="KDE Plasma 6"

@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevWin Manual</title>
+<style>
+:root{--bg:#f6f7fb;--fg:#1b1f2a;--card:#ffffff;--muted:#5b6475;--accent:#3b6cff;--code:#eef1f8;--line:#dde2ee}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1220;--fg:#e7eaf5;--card:#171b2e;--muted:#9aa3b9;--accent:#7a9bff;--code:#0c0f1c;--line:#272c45}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header b{font-size:18px} header span{color:var(--muted);font-size:14px}
+header nav{margin-left:auto;display:flex;gap:14px}
+a{color:var(--accent)}
+main{max-width:860px;margin:0 auto;padding:24px 20px 80px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 28px 24px;margin-bottom:28px}
+h1{font-size:28px;margin:24px 0 4px} h2{font-size:21px;margin-top:34px;border-bottom:1px solid var(--line);padding-bottom:6px} h3{font-size:17px;margin-top:24px}
+code{background:var(--code);padding:2px 6px;border-radius:5px;font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{background:var(--code);padding:14px 16px;border-radius:10px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;width:100%;margin:12px 0} th,td{border:1px solid var(--line);padding:8px 12px;text-align:left} th{background:var(--code)}
+footer{text-align:center;color:var(--muted);font-size:14px;padding:24px}
+@media print{header{position:static} section{border:0}}
+</style></head><body>
+<header><b>DevWin</b><span>Built by Tech Lo Tech Hub</span>
+<nav><a href="#devwin-user-manual">User Manual</a><a href="#troubleshooting-guide">Troubleshooting</a></nav></header>
+<main>
+<section><h1 id="devwin-user-manual">DevWin User Manual</h1>
+<p><em>Version 0.1 · Built by Tech Lo Tech Hub</em></p>
+<h2 id="1-welcome">1. Welcome</h2>
+<p>DevWin is a desktop operating system made for developers and programmers. It looks and feels like Windows 11 with a glass finish, runs <strong>Android apps</strong> and <strong>Windows apps</strong>, and comes with tools for <strong>system development</strong> and <strong>app development</strong> ready to use.</p>
+<p>DevWin is built by <strong>Tech Lo Tech Hub</strong>. Under the hood it uses the Linux kernel, Debian GNU/Linux 13 and the KDE Plasma desktop.</p>
+<p>If something goes wrong, open <strong>DevWin Manual</strong> from the Start menu and go to the Troubleshooting guide, or run <code>devwin-doctor</code> in a terminal.</p>
+<h2 id="2-getting-started">2. Getting started</h2>
+<h3 id="starting-from-a-usb-stick">Starting from a USB stick</h3>
+<ol>
+<li>Plug in the USB stick and restart the computer.</li>
+<li>Open the boot menu (usually F12, F10, F9, Esc or Del, depending on the computer) and choose the USB stick. Choose the <strong>UEFI</strong> entry if there are two.</li>
+<li>If it will not start, turn off <strong>Secure Boot</strong> in the firmware settings and try again.</li>
+</ol>
+<p>The live session logs in automatically as the user <code>devwin</code>. If you are ever asked for a password, it is <code>live</code>. In the live session, nothing you change is kept after a restart.</p>
+<h3 id="installing-to-the-disk">Installing to the disk</h3>
+<ol>
+<li>Open the installer from the desktop or the Start menu (it is called <strong>Install Debian</strong> or <strong>Install System</strong>).</li>
+<li>Follow the steps: language, location, keyboard, disk and your user account.</li>
+<li><strong>Back up your files first.</strong> Choosing to erase the disk deletes everything on it.</li>
+<li>When it finishes, restart and remove the USB stick.</li>
+</ol>
+<h3 id="your-first-login">Your first login</h3>
+<p>The first time you sign in, DevWin sets up your taskbar, theme and wallpaper. This can take up to a minute. If you are online, it also installs the VS Code extensions for Python, C and C++ in the background.</p>
+<h2 id="3-the-desktop">3. The desktop</h2>
+<ul>
+<li><strong>Taskbar:</strong> at the bottom and centered. From the left: the <strong>Start</strong> button, your pinned and open apps, then the tray (network, sound, battery, notifications) and the clock.</li>
+<li><strong>Start menu:</strong> press the Start button or the Windows key, then just start typing to search for an app or a file.</li>
+<li><strong>Wallpaper and look:</strong> right-click the desktop and choose the configure option, or open <strong>System Settings</strong>.</li>
+<li><strong>System Settings:</strong> open it from the Start menu to change Wi-Fi, display, sound, power, keyboard, mouse and language.</li>
+</ul>
+<h3 id="keyboard-shortcuts">Keyboard shortcuts</h3>
+<p>These are KDE's defaults. You can change them in System Settings, under Keyboard, then Shortcuts.</p>
+<table>
+<thead>
+<tr>
+<th>Keys</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows key (Meta)</td>
+<td>Open the Start menu</td>
+</tr>
+<tr>
+<td>Alt + Tab</td>
+<td>Switch between windows</td>
+</tr>
+<tr>
+<td>Meta + D</td>
+<td>Show the desktop</td>
+</tr>
+<tr>
+<td>Meta + W</td>
+<td>Overview of all windows</td>
+</tr>
+<tr>
+<td>Meta + Left / Right</td>
+<td>Snap a window to the left or right half</td>
+</tr>
+<tr>
+<td>Meta + Up</td>
+<td>Maximize the window</td>
+</tr>
+<tr>
+<td>Meta + L</td>
+<td>Lock the screen</td>
+</tr>
+<tr>
+<td>Print Screen</td>
+<td>Take a screenshot</td>
+</tr>
+<tr>
+<td>Alt + F4</td>
+<td>Close the window</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-everyday-setup">4. Everyday setup</h2>
+<ul>
+<li><strong>Wi-Fi:</strong> click the network icon in the tray, pick your network and enter the password.</li>
+<li><strong>Bluetooth:</strong> open System Settings, then Bluetooth, and pair your device.</li>
+<li><strong>Sound:</strong> click the speaker icon in the tray to change volume and choose the output device.</li>
+<li><strong>Screen size and sharpness:</strong> System Settings, then Display. On high-resolution screens, increase the <strong>Scale</strong>.</li>
+<li><strong>Screenshots:</strong> press Print Screen to open the screenshot tool.</li>
+<li><strong>Printing:</strong> printing is not set up by default. To add it, open a terminal and run <code>sudo apt install cups print-manager</code>.</li>
+</ul>
+<h2 id="5-installing-and-updating-software">5. Installing and updating software</h2>
+<ul>
+<li><strong>Discover:</strong> open <strong>Discover</strong> from the Start menu to find and install apps from Flatpak and Debian.</li>
+<li><strong>Terminal:</strong> <code>sudo apt update</code>, then <code>sudo apt install &lt;package-name&gt;</code>. To search, use <code>apt search &lt;word&gt;</code>.</li>
+<li><strong>Flatpak apps:</strong> if Flathub is not set up yet, run <code>flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo</code>, then <code>flatpak install flathub &lt;app-id&gt;</code>.</li>
+<li><strong>Remove an app:</strong> <code>sudo apt remove &lt;package-name&gt;</code>.</li>
+<li><strong>Update everything:</strong> <code>sudo apt update &amp;&amp; sudo apt full-upgrade</code>, then <code>flatpak update</code>. Restart afterwards if the kernel was updated. Back up important files first.</li>
+</ul>
+<h2 id="6-android-apps">6. Android apps</h2>
+<p>DevWin runs Android apps with <strong>Waydroid</strong>.</p>
+<p><strong>One-time setup</strong></p>
+<ol>
+<li>Sign in with the <strong>Plasma (Wayland)</strong> session. You can pick the session at the bottom of the login screen.</li>
+<li>Open a terminal and run <code>devwin-android-setup</code>. It downloads the Android system, which is a large download (about 1 GB or more), so use a good connection.</li>
+<li>When it finishes, Android opens in a window.</li>
+</ol>
+<p><strong>Using Android apps</strong></p>
+<ul>
+<li>Installed Android apps appear in the Start menu like any other app.</li>
+<li>To install an APK file: <code>waydroid app install file.apk</code>.</li>
+<li>To see installed Android apps: <code>waydroid app list</code>.</li>
+<li>To open the full Android screen: <code>waydroid show-full-ui</code>.</li>
+<li>To free memory when you are not using Android: <code>waydroid session stop</code>.</li>
+</ul>
+<p><strong>Google Play:</strong> to sign in to the Play Store, the device must be registered with Google. <code>devwin-android-setup</code> prints the steps at the end. The registration can take a while to take effect.</p>
+<p><strong>Good to know:</strong> Android apps need more memory (4 GB of RAM or more is recommended). Apps that only work on ARM processors may not run on a PC.</p>
+<h2 id="7-windows-apps">7. Windows apps</h2>
+<p>DevWin runs Windows apps with <strong>Wine</strong>.</p>
+<ul>
+<li>Double-click a <code>.exe</code> or <code>.msi</code> file to open it with Wine. Installed Windows apps appear in the Start menu.</li>
+<li><strong>Bottles</strong> is an optional app that makes Wine easier, with a separate setup for each app. Install it with <code>devwin-install-devtools bottles</code>.</li>
+<li>Many classic desktop programs and many games work well. Wine is a compatibility layer and not Windows itself, so some apps do not work. These include Microsoft Office 365, Adobe Creative Cloud, apps with kernel-level copy protection or anti-cheat, and programs that need Windows drivers.</li>
+<li>For apps Wine cannot run, use a real Windows virtual machine. DevWin includes <strong>virt-manager</strong>, but you need your own Windows installation file and license.</li>
+</ul>
+<h2 id="8-for-developers">8. For developers</h2>
+<p><strong>What is included</strong></p>
+<ul>
+<li><strong>Languages:</strong> Python, C, C++, Rust, Go, Java, Node.js, PHP and Ruby.</li>
+<li><strong>Build tools:</strong> GCC, clang, CMake, Ninja, Meson, make, ccache.</li>
+<li><strong>Debugging and analysis:</strong> gdb, lldb, valgrind, strace, perf, Wireshark.</li>
+<li><strong>Kernel, embedded and OS work:</strong> kernel build tools, ARM cross-compilers, OpenOCD, live-build and QEMU.</li>
+<li><strong>Containers and virtual machines:</strong> Docker, Podman, QEMU and virt-manager.</li>
+<li><strong>Other tools:</strong> git, GitHub CLI, Neovim, tmux, zsh, adb and fastboot.</li>
+</ul>
+<p><strong>VS Code</strong> is in the Start menu. The Python, C/C++ and CMake extensions install on first login. To run that again: <code>devwin-vscode-setup --force</code>.</p>
+<p><strong>Quick starts</strong></p>
+<pre><code># C++
+mkdir hello &amp;&amp; cd hello
+printf '#include &lt;iostream&gt;\nint main(){ std::cout &lt;&lt; &quot;Hello from DevWin\\n&quot;; }\n' &gt; main.cpp
+g++ -std=c++20 -Wall -o hello main.cpp &amp;&amp; ./hello
+
+# Python
+python3 -m venv .venv
+source .venv/bin/activate
+pip install requests
+</code></pre>
+<p><strong>Docker:</strong> <code>docker run hello-world</code>. If you get "permission denied", run <code>sudo usermod -aG docker $USER</code>, then sign out and back in.</p>
+<p><strong>More tools on demand:</strong> run <code>devwin-install-devtools</code> to install Node via fnm, Rust via rustup, Kotlin and Gradle via SDKMAN, pyenv, the .NET SDK, Flutter, Android Studio, DBeaver, Postman and Insomnia. They install into your home folder or as Flatpaks.</p>
+<p><strong>Virtual machines:</strong> virtualization must be turned on in the computer's firmware (often called Intel VT-x, AMD-V or SVM).</p>
+<h2 id="9-appearance-and-performance">9. Appearance and performance</h2>
+<ul>
+<li><strong>Glass effects (blur, transparency, wobbly windows):</strong> if the computer feels slow, turn them off in System Settings, under Window Management, then Desktop Effects.</li>
+<li><strong>Re-apply the DevWin look:</strong> run <code>devwin-doctor --fix</code> and choose the first option.</li>
+<li><strong>Rounded window corners:</strong> the effect is installed but off by default. You can try it in Desktop Effects.</li>
+<li><strong>Tips for older computers:</strong></li>
+<li>Turn off the glass effects.</li>
+<li>Close Android (<code>waydroid session stop</code>) when you are not using it.</li>
+<li>Turn off file indexing in System Settings, under Search, then File Search.</li>
+<li>Use <code>btop</code> in a terminal to see what is using memory and CPU.</li>
+<li>DevWin uses compressed memory (zram) and an out-of-memory guard (earlyoom) to stay responsive on low memory.</li>
+</ul>
+<h2 id="10-keeping-your-data-safe">10. Keeping your data safe</h2>
+<ul>
+<li>Copy your Documents and project folders to an external drive or cloud storage regularly.</li>
+<li>For system snapshots you can install Timeshift: <code>sudo apt install timeshift</code>.</li>
+<li>Back up before big updates and before changing disk partitions.</li>
+</ul>
+<h2 id="11-getting-help">11. Getting help</h2>
+<ul>
+<li><code>devwin-help</code>: opens this manual. <code>devwin-help fix</code> opens the Troubleshooting guide. <code>devwin-help --text</code> shows the manual in the terminal.</li>
+<li><code>devwin-doctor</code>: checks your system for common problems and suggests fixes.</li>
+<li><code>devwin-doctor --fix</code>: offers safe one-step fixes (re-apply the look, restart the desktop, sound or Android, turn glass effects on or off).</li>
+<li><code>devwin-doctor --report</code>: saves a report file called <code>devwin-report.txt</code> in your home folder. Send it to Tech Lo Tech Hub when asking for support.</li>
+</ul>
+<h2 id="12-about-credits-and-legal">12. About, credits and legal</h2>
+<p><strong>DevWin 0.1</strong> is built by <strong>Tech Lo Tech Hub</strong>.</p>
+<p>DevWin is made from many open-source projects, including Debian GNU/Linux, the Linux kernel, KDE Plasma, Waydroid, Wine, the Fluent themes and many others. Each is provided under its own license, which you can read in <code>/usr/share/doc/&lt;package-name&gt;/copyright</code>. The software is provided as is, without warranty, as described in those licenses.</p>
+<p><strong>Trademarks:</strong> Windows, Microsoft and Office are trademarks of Microsoft Corporation. Android and Google Play are trademarks of Google LLC. Debian is a registered trademark of Software in the Public Interest, Inc. Linux is a trademark of Linus Torvalds. DevWin is not affiliated with or endorsed by any of them. DevWin's Windows-like appearance comes from open-source themes, and DevWin contains no Windows code.</p></section>
+<section><h1 id="troubleshooting-guide">Troubleshooting Guide</h1>
+<p><em>DevWin 0.1 · Built by Tech Lo Tech Hub</em></p>
+<p><strong>Start here:</strong> open a terminal and run <code>devwin-doctor</code>. It checks the most common problems and tells you what to try. For one-step fixes run <code>devwin-doctor --fix</code>. If you need to ask for help, run <code>devwin-doctor --report</code> and send the file <code>devwin-report.txt</code> from your home folder.</p>
+<p>Commands that start with <code>sudo</code> ask for your password. Copy commands one at a time and read any message that appears.</p>
+<h2 id="starting-up-and-installing">Starting up and installing</h2>
+<h3 id="the-usb-stick-will-not-start">The USB stick will not start</h3>
+<ul>
+<li>Open the boot menu and choose the <strong>UEFI</strong> entry for the USB stick.</li>
+<li>Turn off <strong>Secure Boot</strong> in the firmware settings.</li>
+<li>Write the USB stick again with a tool like balenaEtcher, and try a different USB port.</li>
+<li>Check that the file was not damaged in the download: <code>sha256sum -c devwin-amd64.iso.sha256</code>. It should say OK.</li>
+</ul>
+<h3 id="black-screen-or-a-frozen-picture-at-start">Black screen or a frozen picture at start</h3>
+<p>Graphics drivers are the usual cause. At the boot menu, highlight the first entry and press <strong>e</strong>, add the word <code>nomodeset</code> at the end of the line that starts with <code>linux</code>, then press <strong>F10</strong> to start. If that works, install the right driver after you log in.</p>
+<ul>
+<li><strong>NVIDIA graphics:</strong> <code>sudo apt install nvidia-driver</code>, then restart. If apt cannot find it, enable the <code>non-free</code> section in <code>/etc/apt/sources.list</code> and run <code>sudo apt update</code>.</li>
+<li><strong>AMD and Intel graphics:</strong> <code>sudo apt update &amp;&amp; sudo apt full-upgrade</code>, then restart.</li>
+</ul>
+<h3 id="the-installer-fails">The installer fails</h3>
+<ul>
+<li>Check that the disk has enough free space and is not damaged.</li>
+<li>Do not remove the USB stick during installation.</li>
+<li>The installer keeps a log called <code>session.log</code> under the <code>.cache/calamares</code> folder of the user who ran it. Include it when asking for help.</li>
+</ul>
+<h3 id="the-clock-is-wrong-when-you-dual-boot-with-windows">The clock is wrong when you dual boot with Windows</h3>
+<p>Run <code>timedatectl set-local-rtc 1 --adjust-system-clock</code>.</p>
+<h3 id="i-forgot-my-password">I forgot my password</h3>
+<p>In the live session the password is <code>live</code>. On an installed system: restart, hold Shift (or press Esc) to open the boot menu, choose <strong>Advanced options</strong>, then the <strong>recovery mode</strong> entry, then <strong>root shell</strong>. Run <code>mount -o remount,rw /</code>, then <code>passwd your-username</code>, and restart.</p>
+<h2 id="desktop-and-look">Desktop and look</h2>
+<h3 id="the-taskbar-or-theme-looks-like-plain-kde">The taskbar or theme looks like plain KDE</h3>
+<p>The look is applied once, a little after your first login, and it can take up to a minute. If it still looks wrong:</p>
+<ol>
+<li>Run <code>devwin-doctor --fix</code> and choose <strong>Re-apply the DevWin look</strong>.</li>
+<li>If the desktop is broken after login: press Ctrl + Alt + F3 and sign in, run <code>mv ~/.config/plasma-org.kde.plasma.desktop-appletsrc ~/.config/plasma-org.kde.plasma.desktop-appletsrc.bak</code>, then restart. After the desktop loads, run <code>devwin-doctor --fix</code> and re-apply the look.</li>
+</ol>
+<h3 id="the-desktop-is-slow-or-choppy">The desktop is slow or choppy</h3>
+<ul>
+<li>Turn off glass effects: <code>devwin-doctor --fix</code>, then choose the option to turn them off.</li>
+<li>See what is using memory and CPU: run <code>btop</code>.</li>
+<li>Close Android when you are not using it: <code>waydroid session stop</code>.</li>
+<li>Turn off file indexing: System Settings, then Search, then File Search.</li>
+<li>Make sure the Plasma (Wayland) session and your graphics driver are working: run <code>devwin-doctor</code>.</li>
+</ul>
+<h3 id="the-screen-flickers-or-windows-have-strange-edges">The screen flickers, or windows have strange edges</h3>
+<p>Turn off blur and rounded corners: System Settings, then Window Management, then Desktop Effects. Or run:</p>
+<pre><code>kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false
+busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure
+</code></pre>
+<h3 id="the-computer-freezes-or-runs-out-of-memory">The computer freezes or runs out of memory</h3>
+<ul>
+<li>Run <code>free -h</code> to see how much memory is free.</li>
+<li>Close apps you are not using, especially Android (<code>waydroid session stop</code>), virtual machines and browser tabs.</li>
+<li>DevWin has an out-of-memory guard: <code>systemctl status earlyoom</code>. If an app was closed on its own, this is why.</li>
+<li>Use <code>zramctl</code> to check that compressed memory is on.</li>
+</ul>
+<h2 id="network-sound-and-bluetooth">Network, sound and Bluetooth</h2>
+<h3 id="wi-fi-does-not-work">Wi-Fi does not work</h3>
+<ol>
+<li>Run <code>nmcli device status</code> and <code>rfkill list</code>. If something is blocked, run <code>sudo rfkill unblock all</code>.</li>
+<li>Some Wi-Fi adapters need extra firmware. Run <code>sudo dmesg | grep -i firmware</code> to see which is missing, then install it, for example <code>sudo apt install firmware-brcm80211</code> for many Broadcom adapters.</li>
+<li>Restart the network service: <code>sudo systemctl restart NetworkManager</code>.</li>
+<li>Connecting with a cable or a phone's USB tethering helps you download missing firmware.</li>
+</ol>
+<h3 id="there-is-no-sound">There is no sound</h3>
+<ul>
+<li>Click the speaker icon in the tray and check the volume and the <strong>output device</strong>.</li>
+<li>Restart the sound system: <code>systemctl --user restart pipewire pipewire-pulse wireplumber</code> (or <code>devwin-doctor --fix</code>).</li>
+</ul>
+<h3 id="bluetooth-does-not-work">Bluetooth does not work</h3>
+<p>Run <code>sudo systemctl enable --now bluetooth</code> and <code>sudo rfkill unblock bluetooth</code>, then pair the device again in System Settings.</p>
+<h2 id="software-and-updates">Software and updates</h2>
+<h3 id="apt-shows-errors">apt shows errors</h3>
+<p>Try these in order:</p>
+<pre><code>sudo apt update --fix-missing
+sudo dpkg --configure -a
+sudo apt -f install
+sudo apt full-upgrade
+</code></pre>
+<p>"Could not get lock" means another update is running (for example Discover). Wait for it to finish. Do not delete lock files.</p>
+<h3 id="the-disk-is-full">The disk is full</h3>
+<ul>
+<li>Check: <code>df -h</code>.</li>
+<li>Clean up: <code>sudo apt clean</code>, <code>sudo apt autoremove</code>, <code>flatpak uninstall --unused</code>.</li>
+<li>Free Docker space: <code>docker system prune</code> (this removes unused containers and images).</li>
+<li>Shrink system logs: <code>sudo journalctl --vacuum-size=200M</code>.</li>
+</ul>
+<h2 id="android-apps">Android apps</h2>
+<p>First run <code>devwin-doctor</code>, which checks the points below.</p>
+<h3 id="android-will-not-start">Android will not start</h3>
+<ol>
+<li>Use the <strong>Plasma (Wayland)</strong> session (choose it at the bottom of the login screen). Waydroid does not work in the X11 session.</li>
+<li>Check that the kernel supports Android: <code>grep binder /proc/filesystems</code>. If it prints nothing, this kernel cannot run Android apps.</li>
+<li>Restart it:
+   <code>waydroid session stop
+   sudo systemctl restart waydroid-container
+   waydroid session start
+   waydroid show-full-ui</code></li>
+<li>If it still fails, run <code>waydroid log</code> and include the output when asking for help.</li>
+</ol>
+<h3 id="android-has-no-internet">Android has no internet</h3>
+<p>Docker or a firewall can block Waydroid's network. Restart it with <code>sudo systemctl restart waydroid-container</code> (restart it again after Docker starts). If that does not help, see the Waydroid documentation at docs.waydro.id.</p>
+<h3 id="google-play-says-the-device-is-not-certified">Google Play says the device is not certified</h3>
+<p>Register the device with Google. <code>devwin-android-setup</code> prints the steps. It can take a while to take effect.</p>
+<h3 id="an-android-app-crashes-or-will-not-install">An Android app crashes or will not install</h3>
+<p>Some apps only work on ARM processors. Try another version of the app, or use its web version.</p>
+<h3 id="start-android-again-from-scratch">Start Android again from scratch</h3>
+<p><strong>Warning: this deletes all Android apps and data.</strong></p>
+<pre><code>waydroid session stop
+sudo systemctl stop waydroid-container
+sudo rm -rf /var/lib/waydroid ~/.local/share/waydroid
+devwin-android-setup
+</code></pre>
+<h2 id="windows-apps">Windows apps</h2>
+<h3 id="a-exe-file-will-not-open-or-the-app-crashes">A .exe file will not open or the app crashes</h3>
+<ol>
+<li>Check that Wine is installed: <code>wine --version</code>.</li>
+<li>Run the app from a terminal to see error messages: <code>wine path/to/app.exe</code>.</li>
+<li>Many apps need extra Windows components. Try <code>winetricks</code> (for example <code>winetricks corefonts vcrun2022</code>).</li>
+<li>Try <strong>Bottles</strong> (<code>devwin-install-devtools bottles</code>) with a separate setup per app.</li>
+<li>If a 32-bit app fails and you see a message about <code>wine32</code>: <code>sudo dpkg --add-architecture i386 &amp;&amp; sudo apt update &amp;&amp; sudo apt install wine32:i386</code>.</li>
+<li>If Wine still cannot run the app, use a Windows virtual machine with virt-manager.</li>
+</ol>
+<h3 id="start-the-default-wine-setup-again">Start the default Wine setup again</h3>
+<p><strong>Warning: this deletes Windows apps installed in the default Wine folder.</strong> Run <code>rm -rf ~/.wine</code>.</p>
+<h2 id="developer-tools">Developer tools</h2>
+<h3 id="vs-code-is-missing-or-its-extensions-are-missing">VS Code is missing or its extensions are missing</h3>
+<ul>
+<li>Not installed: run <code>devwin-install-devtools vscode</code>.</li>
+<li>No extensions: connect to the internet and run <code>devwin-vscode-setup --force</code>.</li>
+<li>Blank or flickering window: run <code>code --disable-gpu</code>.</li>
+<li>Reset VS Code settings (your extensions stay): move <code>~/.config/Code/User/settings.json</code> away and restart VS Code.</li>
+</ul>
+<h3 id="docker-says-permission-denied-or-cannot-connect-to-the-daemon">Docker says "permission denied" or "cannot connect to the daemon"</h3>
+<ul>
+<li>Permission: <code>sudo usermod -aG docker $USER</code>, then sign out and back in.</li>
+<li>Daemon not running: <code>sudo systemctl enable --now docker</code>.</li>
+</ul>
+<h3 id="virtual-machines-say-kvm-is-not-available">Virtual machines say KVM is not available</h3>
+<ul>
+<li>Turn on virtualization in the computer's firmware (Intel VT-x, AMD-V or SVM).</li>
+<li>Check: <code>ls /dev/kvm</code>.</li>
+<li>Add yourself to the groups: <code>sudo usermod -aG kvm,libvirt $USER</code>, sign out and back in, and run <code>sudo systemctl enable --now libvirtd</code>.</li>
+</ul>
+<h2 id="still-stuck">Still stuck?</h2>
+<ol>
+<li>Run <code>devwin-doctor --report</code>.</li>
+<li>Send the file <code>devwin-report.txt</code> from your home folder to Tech Lo Tech Hub, with a short description of what happened and what you tried.</li>
+</ol></section>
+</main>
+<footer>DevWin 0.1 &middot; Built by Tech Lo Tech Hub</footer>
+</body></html>
